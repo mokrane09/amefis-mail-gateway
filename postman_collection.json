@@ -1,0 +1,1199 @@
+{
+  "info": {
+    "name": "AMEFIS Mail Gateway API",
+    "description": "Production-ready IMAP gateway REST API for email management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{sessionToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4001",
+      "type": "string"
+    },
+    {
+      "key": "sessionToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "folderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "messageId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "attachmentId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Get Health Status",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the service is running"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/health",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"ok\",\n  \"timestamp\": \"2023-11-06T10:30:00.000Z\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Service health check endpoint"
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login - Default IMAP Server",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('sessionToken', jsonData.sessionToken);",
+                  "    console.log('Session token saved:', jsonData.sessionToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"your_password_here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Login using default IMAP server from .env. Automatically saves session token."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"sessionToken\": \"a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6\",\n  \"expiresAt\": \"2023-11-06T12:30:00.000Z\",\n  \"email\": \"user@example.com\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login - Custom IMAP Server",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('sessionToken', jsonData.sessionToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"your_password_here\",\n  \"host\": \"imap.gmail.com\",\n  \"port\": 993,\n  \"secure\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Login with custom IMAP server settings (e.g., Gmail)"
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Invalid Credentials",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"wrong_password\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Test with invalid credentials to see error handling"
+          },
+          "response": [
+            {
+              "name": "Error - Invalid Credentials",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"wrong_password\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["login"]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Login failed: Authentication failed\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["logout"]
+            },
+            "description": "Logout and cleanup session. Closes IMAP connection and deletes all cached data."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/logout",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["logout"]
+                }
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        }
+      ],
+      "description": "Authentication endpoints for login and logout"
+    },
+    {
+      "name": "Folders",
+      "item": [
+        {
+          "name": "Get All Folders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.collectionVariables.set('folderId', jsonData[0].id);",
+                  "        console.log('First folder ID saved:', jsonData[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["folders"]
+            },
+            "description": "Get all folders for the current session. Automatically saves first folder ID."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/folders",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["folders"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"name\": \"INBOX\",\n    \"path\": \"INBOX\",\n    \"specialUse\": \"\\\\Inbox\",\n    \"uidValidity\": 1234567890,\n    \"uidNext\": 150\n  },\n  {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"name\": \"Sent\",\n    \"path\": \"Sent\",\n    \"specialUse\": \"\\\\Sent\",\n    \"uidValidity\": 1234567891,\n    \"uidNext\": 75\n  },\n  {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440002\",\n    \"name\": \"Trash\",\n    \"path\": \"Trash\",\n    \"specialUse\": \"\\\\Trash\",\n    \"uidValidity\": 1234567892,\n    \"uidNext\": 20\n  }\n]"
+            }
+          ]
+        }
+      ],
+      "description": "Folder management endpoints"
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get Messages - First Page",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.collectionVariables.set('messageId', jsonData[0].id);",
+                  "        console.log('First message ID saved:', jsonData[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/messages?folderId={{folderId}}&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages"],
+              "query": [
+                {
+                  "key": "folderId",
+                  "value": "{{folderId}}",
+                  "description": "Folder UUID"
+                },
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Number of messages to return"
+                }
+              ]
+            },
+            "description": "Get first page of messages from a folder. Automatically saves first message ID."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/messages?folderId=550e8400-e29b-41d4-a716-446655440000&limit=50",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["messages"],
+                  "query": [
+                    {
+                      "key": "folderId",
+                      "value": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"660e8400-e29b-41d4-a716-446655440000\",\n    \"folderId\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"uid\": 149,\n    \"subject\": \"Welcome to our service\",\n    \"date\": \"2023-11-06T10:00:00.000Z\",\n    \"fromName\": \"Support Team\",\n    \"fromEmail\": \"support@example.com\",\n    \"toList\": \"user@example.com\",\n    \"ccList\": null,\n    \"bccList\": null,\n    \"seen\": false,\n    \"flagged\": false,\n    \"answered\": false,\n    \"draft\": false,\n    \"deleted\": false,\n    \"hasHtml\": true,\n    \"hasText\": true,\n    \"snippet\": \"Thank you for signing up! We're excited to have you...\",\n    \"size\": 5432,\n    \"hasAttachments\": true\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Messages - With Pagination",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/messages?folderId={{folderId}}&limit=20&cursorUid=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages"],
+              "query": [
+                {
+                  "key": "folderId",
+                  "value": "{{folderId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "cursorUid",
+                  "value": "100",
+                  "description": "Return messages with UID < this value"
+                }
+              ]
+            },
+            "description": "Get next page of messages using cursor-based pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Message - Full Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.attachments && jsonData.attachments.length > 0) {",
+                  "        pm.collectionVariables.set('attachmentId', jsonData.attachments[0].id);",
+                  "        console.log('First attachment ID saved:', jsonData.attachments[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{messageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "{{messageId}}"]
+            },
+            "description": "Get full message details including HTML content and attachments. CID images are rewritten to authenticated URLs."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/messages/660e8400-e29b-41d4-a716-446655440000",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["messages", "660e8400-e29b-41d4-a716-446655440000"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"660e8400-e29b-41d4-a716-446655440000\",\n  \"folderId\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"uid\": 149,\n  \"msgId\": \"<abc123@mail.example.com>\",\n  \"threadKey\": \"<abc123@mail.example.com>\",\n  \"subject\": \"Welcome to our service\",\n  \"date\": \"2023-11-06T10:00:00.000Z\",\n  \"fromName\": \"Support Team\",\n  \"fromEmail\": \"support@example.com\",\n  \"toList\": \"user@example.com\",\n  \"ccList\": null,\n  \"bccList\": null,\n  \"seen\": false,\n  \"flagged\": false,\n  \"answered\": false,\n  \"draft\": false,\n  \"deleted\": false,\n  \"hasHtml\": true,\n  \"hasText\": true,\n  \"snippet\": \"Thank you for signing up! We're excited to have you...\",\n  \"size\": 5432,\n  \"hasAttachments\": true,\n  \"htmlContent\": \"<p>Thank you for signing up!</p><img src=\\\"/attachments/770e8400-e29b-41d4-a716-446655440000?inline=1\\\" />\",\n  \"textContent\": \"Thank you for signing up!\",\n  \"attachments\": [\n    {\n      \"id\": \"770e8400-e29b-41d4-a716-446655440000\",\n      \"filename\": \"logo.png\",\n      \"mimeType\": \"image/png\",\n      \"size\": 15234,\n      \"isInline\": true,\n      \"cid\": \"logo@example.com\",\n      \"downloadUrl\": \"/attachments/770e8400-e29b-41d4-a716-446655440000\"\n    }\n  ],\n  \"blockedRemoteImages\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Flags - Mark as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"add\": [\"\\\\Seen\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{messageId}}/flags",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "{{messageId}}", "flags"]
+            },
+            "description": "Mark message as read by adding \\Seen flag"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"add\": [\"\\\\Seen\"]\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/messages/660e8400-e29b-41d4-a716-446655440000/flags",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["messages", "660e8400-e29b-41d4-a716-446655440000", "flags"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Flags - Star Message",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"add\": [\"\\\\Flagged\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{messageId}}/flags",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "{{messageId}}", "flags"]
+            },
+            "description": "Star/flag a message"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Flags - Mark as Unread",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remove\": [\"\\\\Seen\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{messageId}}/flags",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "{{messageId}}", "flags"]
+            },
+            "description": "Mark message as unread by removing \\Seen flag"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Flags - Multiple Changes",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"add\": [\"\\\\Seen\", \"\\\\Flagged\"],\n  \"remove\": [\"\\\\Answered\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{messageId}}/flags",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "{{messageId}}", "flags"]
+            },
+            "description": "Add and remove multiple flags in one request"
+          },
+          "response": []
+        },
+        {
+          "name": "Move Message to Folder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toFolderId\": \"550e8400-e29b-41d4-a716-446655440001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{messageId}}/move",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "{{messageId}}", "move"]
+            },
+            "description": "Move message to another folder (uses MOVE command if available, otherwise copy+delete)"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"toFolderId\": \"550e8400-e29b-41d4-a716-446655440001\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/messages/660e8400-e29b-41d4-a716-446655440000/move",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["messages", "660e8400-e29b-41d4-a716-446655440000", "move"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Message - Soft (to Trash)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hard\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{messageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "{{messageId}}"]
+            },
+            "description": "Soft delete - moves message to Trash folder"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"hard\": false\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/messages/660e8400-e29b-41d4-a716-446655440000",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["messages", "660e8400-e29b-41d4-a716-446655440000"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Message - Hard (Permanent)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hard\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{messageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "{{messageId}}"]
+            },
+            "description": "Hard delete - permanently removes message from server"
+          },
+          "response": []
+        }
+      ],
+      "description": "Message management endpoints"
+    },
+    {
+      "name": "Attachments",
+      "item": [
+        {
+          "name": "Download Attachment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attachments/{{attachmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attachments", "{{attachmentId}}"]
+            },
+            "description": "Download attachment as attachment (Content-Disposition: attachment)"
+          },
+          "response": []
+        },
+        {
+          "name": "View Inline Attachment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attachments/{{attachmentId}}?inline=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["attachments", "{{attachmentId}}"],
+              "query": [
+                {
+                  "key": "inline",
+                  "value": "1",
+                  "description": "Display inline instead of downloading"
+                }
+              ]
+            },
+            "description": "View attachment inline (Content-Disposition: inline). Used for inline images."
+          },
+          "response": []
+        }
+      ],
+      "description": "Attachment download endpoints with rate limiting (100 req/min)"
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Search - Simple Query",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?q=invoice&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "invoice",
+                  "description": "Search query"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Search messages by keyword. Searches in subject, body, and email addresses."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/search?q=invoice&limit=50",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["search"],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "invoice"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"660e8400-e29b-41d4-a716-446655440001\",\n    \"folderId\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"uid\": 145,\n    \"subject\": \"Invoice for November 2023\",\n    \"date\": \"2023-11-01T10:00:00.000Z\",\n    \"fromName\": \"Billing Department\",\n    \"fromEmail\": \"billing@company.com\",\n    \"toList\": \"user@example.com\",\n    \"ccList\": null,\n    \"bccList\": null,\n    \"seen\": true,\n    \"flagged\": false,\n    \"answered\": false,\n    \"draft\": false,\n    \"deleted\": false,\n    \"hasHtml\": true,\n    \"hasText\": true,\n    \"snippet\": \"Your invoice for November 2023 is now available...\",\n    \"size\": 3421,\n    \"hasAttachments\": true\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Search - Email Address",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?q=support@example.com&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "support@example.com"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Search for messages from/to a specific email address"
+          },
+          "response": []
+        },
+        {
+          "name": "Search - Partial Match",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?q=meetin&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "meetin",
+                  "description": "Partial word (will match 'meeting', 'meetings', etc.)"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Search with partial word using trigram similarity"
+          },
+          "response": []
+        },
+        {
+          "name": "Search - Multi-word Query",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?q=project status update&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "project status update"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Search with multiple words using full-text search"
+          },
+          "response": []
+        }
+      ],
+      "description": "Full-text and fuzzy search endpoints"
+    },
+    {
+      "name": "Server-Sent Events",
+      "item": [
+        {
+          "name": "Connect to Event Stream",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"]
+            },
+            "description": "Connect to SSE stream for real-time updates. Keep connection open to receive events:\n\n- `new`: New messages arrived\n- `flags`: Message flags changed\n- `moved`: Message moved to another folder\n- `deleted`: Message deleted\n\nHeartbeat comments sent every 20 seconds."
+          },
+          "response": [
+            {
+              "name": "Event Stream Examples",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/events",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["events"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "plain",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/event-stream"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-cache"
+                }
+              ],
+              "body": ": connected\n\ndata: {\"type\":\"new\",\"data\":{\"folderId\":\"550e8400-e29b-41d4-a716-446655440000\",\"folderPath\":\"INBOX\",\"count\":3}}\n\n: heartbeat\n\ndata: {\"type\":\"flags\",\"data\":{\"messageId\":\"660e8400-e29b-41d4-a716-446655440000\",\"flags\":{\"seen\":true,\"flagged\":false,\"answered\":false,\"deleted\":false}}}\n\n"
+            }
+          ]
+        }
+      ],
+      "description": "Server-Sent Events for real-time notifications"
+    },
+    {
+      "name": "Error Scenarios",
+      "item": [
+        {
+          "name": "Unauthorized - No Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["folders"]
+            },
+            "description": "Test request without authentication token"
+          },
+          "response": [
+            {
+              "name": "Error - 401 Unauthorized",
+              "originalRequest": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/folders",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["folders"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Authorization header required\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invalid Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "invalid_token_12345",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["folders"]
+            },
+            "description": "Test with invalid session token"
+          },
+          "response": [
+            {
+              "name": "Error - 401 Invalid Session",
+              "originalRequest": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "invalid_token_12345",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/folders",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["folders"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Invalid or expired session\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Message Not Found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/messages/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "00000000-0000-0000-0000-000000000000"]
+            },
+            "description": "Test with non-existent message ID"
+          },
+          "response": [
+            {
+              "name": "Error - 404 Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/messages/00000000-0000-0000-0000-000000000000",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["messages", "00000000-0000-0000-0000-000000000000"]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Message not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Missing Required Parameter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages"]
+            },
+            "description": "Test without required folderId parameter"
+          },
+          "response": [
+            {
+              "name": "Error - 400 Bad Request",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/messages",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["messages"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"folderId is required\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Common error scenarios for testing"
+    }
+  ]
+}
+
