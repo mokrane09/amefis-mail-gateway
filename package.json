@@ -1,0 +1,35 @@
+{
+  "name": "amefis-mail-gateway",
+  "version": "1.0.0",
+  "description": "Production-ready Node.js IMAP gateway service",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "migrate:make": "knex migrate:make",
+    "migrate:latest": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback"
+  },
+  "keywords": ["imap", "mail", "gateway"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.10",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "imapflow": "^1.0.157",
+    "knex": "^3.1.0",
+    "mailparser": "^3.6.5",
+    "node-cron": "^3.0.3",
+    "pg": "^8.11.3",
+    "sanitize-html": "^2.11.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
+
