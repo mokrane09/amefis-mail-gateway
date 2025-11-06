@@ -8,7 +8,10 @@
     "start": "node src/server.js",
     "migrate:make": "knex migrate:make",
     "migrate:latest": "knex migrate:latest",
-    "migrate:rollback": "knex migrate:rollback"
+    "migrate:rollback": "knex migrate:rollback",
+    "migrate:rollback:all": "knex migrate:rollback --all",
+    "migrate:fresh": "npm run migrate:rollback:all && npm run migrate:latest",
+    "migrate:status": "knex migrate:status"
   },
   "keywords": ["imap", "mail", "gateway"],
   "author": "",

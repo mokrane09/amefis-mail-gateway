@@ -63,6 +63,28 @@ Run migrations:
 npm run migrate:latest
 ```
 
+### Migration Commands
+
+```bash
+# Run all pending migrations
+npm run migrate:latest
+
+# Rollback last batch of migrations
+npm run migrate:rollback
+
+# Rollback all migrations
+npm run migrate:rollback:all
+
+# Fresh migration (rollback all + run all)
+npm run migrate:fresh
+
+# Check migration status
+npm run migrate:status
+
+# Create a new migration
+npm run migrate:make migration_name
+```
+
 ## Running
 
 Development mode with auto-reload:
@@ -144,8 +166,3 @@ npm start
 - HTML sanitization with allowlist
 - Path traversal protection
 - No credential persistence
-
-## License
-
-ISC
-
