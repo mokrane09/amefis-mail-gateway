@@ -229,39 +229,131 @@ async function processMessages(messages, folder, sessionId, knex) {
 }
 
 async function processNewMessages(messages, folder, sessionId, knex) {
-  // This is a simplified version - full parsing happens in auth.js during login
-  // Here we just insert basic metadata
+  const { v4: uuidv4 } = require('uuid');
+  const { simpleParser } = require('mailparser');
+  const html = require('./html');
+  const files = require('./files');
+  
+  // Get session email for file storage
+  const session = await knex('sessions').where({ id: sessionId }).first();
+  if (!session) return;
+  
+  // Get IMAP client from active sessions
+  const activeSessions = sessionStore.getAllActiveSessions();
+  const activeSession = activeSessions.find(s => s.sessionId === sessionId);
+  if (!activeSession) return;
+  
+  const imapClient = activeSession.imapClient;
   
   for (const msg of messages) {
-    const envelope = msg.envelope || {};
-    const flags = extractFlags(msg.flags);
-    
-    const messageData = {
-      session_id: sessionId,
-      folder_id: folder.id,
-      uid: msg.uid,
-      msg_id: envelope.messageId || null,
-      subject: envelope.subject || null,
-      date: envelope.date || null,
-      from_name: envelope.from?.[0]?.name || null,
-      from_email: envelope.from?.[0]?.address || null,
-      to_list: envelope.to?.map(a => a.address).join(', ') || null,
-      cc_list: envelope.cc?.map(a => a.address).join(', ') || null,
-      bcc_list: envelope.bcc?.map(a => a.address).join(', ') || null,
-      seen: flags.seen,
-      flagged: flags.flagged,
-      answered: flags.answered,
-      draft: flags.draft,
-      deleted: flags.deleted,
-      size: msg.size || 0,
-      snippet: envelope.subject ? envelope.subject.substring(0, 200) : null
-    };
-
-    await knex('messages')
-      .insert(messageData)
-      .onConflict(['folder_id', 'uid'])
-      .ignore();
+    try {
+      const envelope = msg.envelope || {};
+      const flags = extractFlags(msg.flags);
+      
+      // Compute thread key
+      const threadKey = computeThreadKey(envelope);
+      
+      // Parse full message for body and attachments
+      const source = await imapClient.fetchMessageSource(msg.uid);
+      const parsed = await simpleParser(source);
+      
+      let bodyText = '';
+      let bodyHtml = '';
+      let hasText = false;
+      let hasHtml = false;
+      
+      if (parsed.text) {
+        bodyText = parsed.text;
+        hasText = true;
+      }
+      
+      if (parsed.html) {
+        bodyHtml = parsed.html;
+        hasHtml = true;
+      }
+      
+      const snippet = html.createSnippet(bodyText || html.extractPlainText(bodyHtml), 200);
+      
+      const messageId = uuidv4();
+      
+      await knex('messages').insert({
+        id: messageId,
+        session_id: sessionId,
+        folder_id: folder.id,
+        uid: msg.uid,
+        msg_id: envelope.messageId || null,
+        thread_key: threadKey,
+        subject: envelope.subject || null,
+        date: envelope.date || null,
+        from_name: envelope.from?.[0]?.name || null,
+        from_email: envelope.from?.[0]?.address || null,
+        to_list: envelope.to?.map(a => a.address).join(', ') || null,
+        cc_list: envelope.cc?.map(a => a.address).join(', ') || null,
+        bcc_list: envelope.bcc?.map(a => a.address).join(', ') || null,
+        seen: flags.seen,
+        flagged: flags.flagged,
+        answered: flags.answered,
+        draft: flags.draft,
+        deleted: flags.deleted,
+        has_html: hasHtml,
+        has_text: hasText,
+        snippet,
+        size: msg.size || 0,
+        has_attachments: (parsed.attachments?.length || 0) > 0,
+        body_tsv: knex.raw('to_tsvector(\'simple\', ?)', [bodyText])
+      }).onConflict(['folder_id', 'uid']).ignore();
+      
+      // Process attachments
+      if (parsed.attachments && parsed.attachments.length > 0) {
+        for (const attachment of parsed.attachments) {
+          try {
+            const isInline = !!attachment.contentId;
+            const cid = attachment.contentId ? attachment.contentId.replace(/^<|>$/g, '') : null;
+            
+            const { relativePath } = await files.saveAttachment(
+              session.email,
+              messageId,
+              attachment.filename || 'unnamed',
+              attachment.content
+            );
+            
+            await knex('attachments').insert({
+              session_id: sessionId,
+              message_id: messageId,
+              filename: attachment.filename || 'unnamed',
+              mime_type: attachment.contentType || 'application/octet-stream',
+              size: attachment.size || 0,
+              path: relativePath,
+              is_inline: isInline,
+              cid
+            });
+          } catch (err) {
+            logger.error('Failed to save attachment during sync', { 
+              messageId, 
+              filename: attachment.filename,
+              error: err.message 
+            });
+          }
+        }
+      }
+    } catch (err) {
+      logger.error('Failed to process new message during sync', { 
+        uid: msg.uid,
+        folder: folder.path,
+        error: err.message 
+      });
+    }
   }
+}
+
+function computeThreadKey(envelope) {
+  if (envelope.references && envelope.references.length > 0) {
+    return envelope.references[0];
+  }
+  if (envelope.inReplyTo) {
+    return envelope.inReplyTo;
+  }
+  return envelope.messageId || null;
 }
 
 function extractFlags(flags) {

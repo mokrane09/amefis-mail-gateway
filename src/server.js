@@ -21,6 +21,7 @@ const messagesRouter = require('./api/messages');
 const attachmentsRouter = require('./api/attachments');
 const searchRouter = require('./api/search');
 const eventsRouter = require('./api/events');
+const syncRouter = require('./api/sync');
 
 const PORT = process.env.PORT || 4001;
 
@@ -115,6 +116,7 @@ async function bootstrap() {
     app.use('/attachments', attachmentLimiter, attachmentsRouter);
     app.use('/search', searchRouter);
     app.use('/events', eventsRouter);
+    app.use('/sync', syncRouter);
 
     // 404 handler
     app.use((req, res) => {

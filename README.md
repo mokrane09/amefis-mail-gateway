@@ -149,6 +149,13 @@ npm start
 - Returns: Server-Sent Events stream
 - Events: `{ type: "new"|"flags"|"moved"|"deleted", data: {...} }`
 
+### Sync
+
+**POST /sync/now**
+- Triggers immediate sync of all folders
+- Useful for testing or forcing immediate update
+- Returns: `{ success: true, message: "Sync completed successfully" }`
+
 ## Architecture
 
 - **IMAP Manager**: Handles IMAP connections with capability detection (IDLE, MOVE, CONDSTORE, QRESYNC)
