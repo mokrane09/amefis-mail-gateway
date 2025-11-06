@@ -47,7 +47,23 @@ ATTACH_BASE=./data
 IMAP_DEFAULT_HOST=mail.example.com
 IMAP_DEFAULT_SECURE=true
 IMAP_DEFAULT_PORT=993
+SESSION_DURATION_HOURS=2
 ```
+
+### Session Configuration
+
+**SESSION_DURATION_HOURS**: Controls how long sessions remain active (default: 2 hours)
+
+**Session Behavior:**
+- **Sliding Window Expiration**: Every authenticated request extends the session by SESSION_DURATION_HOURS from the current time
+- **Session Reuse**: If a user logs in again with the same email/host while a session is still active, the existing session is reused instead of creating a new one
+- **Automatic Cleanup**: Sessions that expire are automatically cleaned up (IMAP connection closed, cached data deleted)
+
+Example: With `SESSION_DURATION_HOURS=2`:
+- User logs in at 10:00 AM → session expires at 12:00 PM
+- User makes a request at 11:00 AM → session now expires at 1:00 PM
+- User makes a request at 12:30 PM → session now expires at 2:30 PM
+- If inactive for 2 hours, session expires and is cleaned up
 
 ## Database Setup
 
@@ -105,7 +121,9 @@ npm start
 
 **POST /login**
 - Body: `{ email, password, host?, port?, secure? }`
-- Returns: `{ sessionToken, expiresAt, email }`
+- Returns: `{ sessionToken, expiresAt, email, reused: boolean }`
+- **Session Reuse**: If an active session exists for the same email/host, it will be reused (returns `reused: true`)
+- **New Session**: If no active session exists, creates a new one (returns `reused: false`)
 
 **POST /logout**
 - Headers: `Authorization: Bearer <token>`

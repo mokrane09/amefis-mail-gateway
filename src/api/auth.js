@@ -20,13 +20,53 @@ router.post('/login', async (req, res) => {
 
   try {
     const { knex } = getDb();
-    const expiresAt = dayjs().add(2, 'hours');
+    const sessionDurationHours = parseInt(process.env.SESSION_DURATION_HOURS || '2', 10);
+    const expiresAt = dayjs().add(sessionDurationHours, 'hours');
+    const imapHost = host || process.env.IMAP_DEFAULT_HOST;
 
-    // Create session in DB
+    // Check for existing active session for this email
+    const existingSession = await knex('sessions')
+      .where({ email, host: imapHost })
+      .where('expires_at', '>', dayjs().toISOString())
+      .first();
+
+    // Check if session is in memory
+    const activeSessions = sessionStore.getAllActiveSessions();
+    const activeMemorySession = activeSessions.find(s => 
+      s.email === email && s.host === imapHost
+    );
+
+    if (existingSession && activeMemorySession) {
+      // Reuse existing session
+      logger.info('Reusing existing session', { 
+        sessionId: existingSession.id, 
+        email 
+      });
+
+      // Update session expiration and last seen
+      await knex('sessions')
+        .where({ id: existingSession.id })
+        .update({
+          last_seen_at: dayjs().toISOString(),
+          expires_at: expiresAt.toISOString()
+        });
+
+      // Update last seen in memory
+      sessionStore.updateLastSeen(activeMemorySession.token);
+
+      return res.json({
+        sessionToken: activeMemorySession.token,
+        expiresAt: expiresAt.toISOString(),
+        email,
+        reused: true
+      });
+    }
+
+    // Create new session in DB
     const [session] = await knex('sessions')
       .insert({
         email,
-        host: host || process.env.IMAP_DEFAULT_HOST,
+        host: imapHost,
         expires_at: expiresAt.toISOString()
       })
       .returning('*');
@@ -104,7 +144,8 @@ router.post('/login', async (req, res) => {
     res.json({
       sessionToken,
       expiresAt: expiresAt.toISOString(),
-      email
+      email,
+      reused: false
     });
 
   } catch (err) {

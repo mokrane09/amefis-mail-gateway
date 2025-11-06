@@ -99,8 +99,28 @@ async function bootstrap() {
         return res.status(401).json({ error: 'Invalid or expired session' });
       }
 
-      // Update last seen
+      // Update last seen in memory
       sessionStore.updateLastSeen(token);
+
+      // Update expires_at in database (sliding window expiration)
+      const { getDb } = require('./core/db');
+      const dayjs = require('dayjs');
+      const { knex } = getDb();
+      const sessionDurationHours = parseInt(process.env.SESSION_DURATION_HOURS || '2', 10);
+      const newExpiresAt = dayjs().add(sessionDurationHours, 'hours');
+      
+      knex('sessions')
+        .where({ id: session.sessionId })
+        .update({
+          last_seen_at: dayjs().toISOString(),
+          expires_at: newExpiresAt.toISOString()
+        })
+        .catch(err => {
+          logger.error('Failed to update session expiration', { 
+            sessionId: session.sessionId, 
+            error: err.message 
+          });
+        });
 
       // Attach session to request
       req.session = session;

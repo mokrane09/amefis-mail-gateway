@@ -417,12 +417,13 @@ async function syncAllActiveSessions() {
 async function expireInactiveSessions() {
   const { knex } = getDb();
   const now = dayjs();
+  const sessionDurationHours = parseInt(process.env.SESSION_DURATION_HOURS || '2', 10);
 
   try {
-    // Find expired sessions in DB
+    // Find expired sessions in DB (check both expires_at and last_seen_at for safety)
     const expiredSessions = await knex('sessions')
       .where('expires_at', '<', now.toISOString())
-      .orWhere('last_seen_at', '<', now.subtract(2, 'hours').toISOString())
+      .orWhere('last_seen_at', '<', now.subtract(sessionDurationHours, 'hours').toISOString())
       .select('*');
 
     if (expiredSessions.length === 0) return;
