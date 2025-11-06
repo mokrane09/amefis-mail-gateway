@@ -357,7 +357,21 @@ function computeThreadKey(envelope) {
 }
 
 function extractFlags(flags) {
-  const flagSet = new Set((flags || []).map(f => f.toLowerCase()));
+  // Handle different flag formats: Array, Set, or undefined
+  let flagArray = [];
+  
+  if (!flags) {
+    flagArray = [];
+  } else if (Array.isArray(flags)) {
+    flagArray = flags;
+  } else if (flags instanceof Set) {
+    flagArray = Array.from(flags);
+  } else if (typeof flags === 'object') {
+    // Handle object with flags property or other structures
+    flagArray = flags.flags ? Array.from(flags.flags) : [];
+  }
+  
+  const flagSet = new Set(flagArray.map(f => String(f).toLowerCase()));
   
   return {
     seen: flagSet.has('\\seen'),
