@@ -1,7 +1,10 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
 const path = require('path');
 const knexLib = require('knex');
 const logger = require('./logger');
+
+// Configure pg to parse BigInt as string to avoid JSON serialization issues
+types.setTypeParser(20, (val) => val ? String(val) : null); // BigInt
 
 let pool = null;
 let knex = null;

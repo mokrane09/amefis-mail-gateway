@@ -260,8 +260,13 @@ class ImapManager {
         });
       }
 
-      // Start IDLE
-      await this.client.idle();
+      // Start IDLE in background (don't await - it blocks until IDLE ends)
+      this.client.idle().then(() => {
+        logger.debug('IDLE ended', { mailbox: this.currentMailbox });
+      }).catch(err => {
+        logger.error('IDLE error', { error: err.message });
+      });
+      
       logger.info('IDLE started on mailbox', { mailbox: this.currentMailbox });
 
       // Schedule idle recycling between 25-29 minutes

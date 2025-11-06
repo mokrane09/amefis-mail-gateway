@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 
 module.exports = {
   development: {
@@ -11,7 +12,7 @@ module.exports = {
       password: process.env.PGPASSWORD || ''
     },
     migrations: {
-      directory: './migrations',
+      directory: path.join(__dirname, 'migrations'),
       tableName: 'knex_migrations'
     }
   },
@@ -25,7 +26,7 @@ module.exports = {
       password: process.env.PGPASSWORD
     },
     migrations: {
-      directory: './migrations',
+      directory: path.join(__dirname, 'migrations'),
       tableName: 'knex_migrations'
     },
     pool: {

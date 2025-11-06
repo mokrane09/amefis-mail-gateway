@@ -9,6 +9,11 @@ const sessionStore = require('./core/sessionStore');
 const { startSyncEngine } = require('./core/syncEngine');
 const logger = require('./core/logger');
 
+// Handle BigInt serialization for JSON
+BigInt.prototype.toJSON = function() {
+  return this.toString();
+};
+
 // Import API routes
 const authRouter = require('./api/auth');
 const foldersRouter = require('./api/folders');

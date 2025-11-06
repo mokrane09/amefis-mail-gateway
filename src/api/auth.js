@@ -84,7 +84,7 @@ router.post('/login', async (req, res) => {
       // Start IDLE on INBOX if supported
       const capabilities = imapManager.getCapabilities();
       if (capabilities.idle) {
-        await imapManager.startIdle((event) => {
+        imapManager.startIdle((event) => {
           logger.debug('IDLE event received', { type: event.type });
           // IDLE events will be handled by sync engine
         });
